@@ -13,7 +13,7 @@ const foodController = {
 
   // Create a new food
   create: async (req, res) => {
-    const { name, categoryId, price, image, productionDate, expirationDate } = req.body;
+    const { name, categoryId, price, image, productionDate, expirationDate , des } = req.body;
 
     const newFood = new Food({
       name,
@@ -22,6 +22,7 @@ const foodController = {
       image,
       productionDate,
       expirationDate,
+      des
       // Add other fields if needed
     });
 
@@ -48,7 +49,7 @@ const foodController = {
       food.image = req.body.image || food.image;
       food.productionDate = req.body.productionDate || food.productionDate;
       food.expirationDate = req.body.expirationDate || food.expirationDate;
-      food.quantity = req.body.quantity || food.quantity;
+      food.des = req.body.des || food.des;
 
       // Save updated food
       const updatedFood = await food.save();
@@ -61,12 +62,10 @@ const foodController = {
   // Delete a food by ID
   delete: async (req, res) => {
     try {
-      const food = await Food.findById(req.params.id);
+      const food = await Food.findByIdAndDelete(req.params.id);
       if (!food) {
         return res.status(404).json({ message: 'Food not found' });
       }
-
-      await food.remove();
       res.json({ message: 'Food deleted' });
     } catch (error) {
       res.status(500).json({ message: error.message });
@@ -105,10 +104,7 @@ const foodController = {
       }
 
       const foods = await Food.find(query);
-      if (foods.length === 0) {
-        return res.status(404).json({ message: 'No foods found matching the keyword' });
-      }
-
+     
       res.json(foods);
     } catch (error) {
       res.status(500).json({ message: error.message });

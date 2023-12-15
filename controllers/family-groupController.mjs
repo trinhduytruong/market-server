@@ -15,12 +15,10 @@ const familyGroupController = {
   create: async (req, res) => {
     const { name, members, groupAdmin } = req.body;
   
-    // Thêm groupAdmin vào mảng members nếu chưa có
-    const updatedMembers = members.includes(groupAdmin) ? members : [...members, groupAdmin];
-  
+ 
     const newFamilyGroup = new FamilyGroup({
       name,
-      members: updatedMembers,
+      members : groupAdmin,
       groupAdmin,
     });
   
@@ -42,9 +40,6 @@ const familyGroupController = {
       res.status(400).json({ message: error.message });
     }
   },
-  
-  
-
   // Update a family group by ID
   edit: async (req, res) => {
     try {
@@ -131,6 +126,77 @@ const familyGroupController = {
       }
   
       res.json(familyGroup);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  },
+
+  removeMember: async (req, res) => {
+    const { groupId, userId } = req.body;
+  
+    try {
+      // Tìm nhóm gia đình theo ID
+      const familyGroup = await FamilyGroup.findById(groupId);
+      if (!familyGroup) {
+        return res.status(404).json({ message: 'Family group not found' });
+      }
+  
+      // Kiểm tra xem người dùng có thuộc nhóm này không
+      if (!familyGroup.members.includes(userId)) {
+        return res.status(400).json({ message: 'User is not a member of this group' });
+      }
+  
+      // Xóa userId khỏi danh sách thành viên của nhóm
+      familyGroup.members = familyGroup.members.filter(memberId => memberId.toString() !== userId);
+      await familyGroup.save();
+  
+      // Cập nhật thông tin người dùng
+      await User.findByIdAndUpdate(
+        userId,
+        {
+          isGroup: false,
+          idGroup: null
+        },
+        { new: true }
+      );
+  
+      res.json({ message: 'Member removed from family group', familyGroup });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  },
+
+
+
+  getListItem: async (req, res) => {
+    try {
+      const familyGroup = await FamilyGroup.findById(req.params.groupId).populate(
+        "listItem.foodId"
+      );
+      if (!familyGroup) {
+        return res.status(404).json({ message: "Family not found" });
+      }
+
+      res.json(familyGroup.listItem);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  },
+
+
+  getRecipesForFamily: async (req, res) => {
+    const familyGroupId = req.params.groupId; // Lấy ID nhóm gia đình từ tham số
+    console.log(familyGroupId);
+    try {
+      // Tìm nhóm gia đình theo ID
+      const familyGroup = await FamilyGroup.findById(familyGroupId).populate('recipes');
+      if (!familyGroup) {
+        return res.status(404).json({ message: "Family group not found" });
+      }
+    
+  
+      // Gửi danh sách công thức nấu ăn của nhóm
+      res.json(familyGroup.recipes);
     } catch (error) {
       res.status(500).json({ message: error.message });
     }

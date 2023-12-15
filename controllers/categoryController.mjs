@@ -11,13 +11,26 @@ const categoryController = {
     }
   },
 
+  // Get a category by ID
+  getById: async (req, res) => {
+    try {
+      const category = await Category.findById(req.params.id);
+      if (!category) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      res.json(category);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  },
+
   // Create a new category
   create: async (req, res) => {
-    const { name, image } = req.body;
+    const { name } = req.body;
 
     const newCategory = new Category({
       name,
-      image,
+      
     });
 
     try {
@@ -50,17 +63,16 @@ const categoryController = {
   // Delete a category by ID
   delete: async (req, res) => {
     try {
-      const category = await Category.findById(req.params.id);
+      const category = await Category.findByIdAndDelete(req.params.id);
       if (!category) {
         return res.status(404).json({ message: "Category not found" });
       }
-
-      await category.remove();
       res.json({ message: "Category deleted" });
     } catch (error) {
       res.status(500).json({ message: error.message });
     }
   },
+  
 };
 
 export default categoryController;

@@ -7,8 +7,7 @@ const FoodSchema = new mongoose.Schema({
     image: { type: String }, // Đường dẫn đến ảnh của thực phẩm
     productionDate: { type: Date },
     expirationDate: { type: Date },
-   
-  
+    des : { type : String},
   });
   
   export default mongoose.model("Food", FoodSchema);
